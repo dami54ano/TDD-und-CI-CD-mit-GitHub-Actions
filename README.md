@@ -1,7 +1,58 @@
-![CI](https://github.com/timoelan/GamesLibraryHandout/actions/workflows/ci.yml/badge.svg?branch=main)
+![CI](https://github.com/dami54ano/TDD-und-CI-CD-mit-GitHub-Actions/actions/workflows/ci.yml/badge.svg?branch=main)
 
 
 # Auftrag: Testing der GamesLibrary-Applikation
+
+## Aufgabe 5.3: Integrationstest, Pipeline und Fehlerbericht
+
+Lokal am 24.11.2026 mit Java 26.0.2 und `SPRING_PROFILES_ACTIVE=h2` geprüft:
+`./mvnw -B clean verify` erfolgreich, **25 Tests, 0 Fehler, 0 Fehlschläge**.
+
+- `GameApiIntegrationTest`: vier Tests für Spielliste, Suche mit/ohne Treffer und unbekannte ID; `@SpringBootTest`, MockMvc und H2 prüfen Controller, Service und Repository zusammen.
+- `GameBadgesTest`: feste `Clock`, fünf Tests einschliesslich 30-Tage-Grenze und zukünftigem Erscheinungsdatum.
+- JaCoCo 0.8.16 erzeugt `backend/target/site/jacoco/index.html`.
+- Die bestehende CI-Matrix und `deploy` mit `needs: test` bleiben erhalten. `verify` erzeugt den Bericht, der als **jacoco-backend** hochgeladen wird.
+- [Fehlerbericht #2](https://github.com/dami54ano/TDD-und-CI-CD-mit-GitHub-Actions/issues/2): ungültige Anfragen liefern 500 statt 400; lokal über echtes HTTP reproduziert. Vorlage: `.github/ISSUE_TEMPLATE/bug.md`.
+
+### Abdeckung des lokalen Builds
+
+| Bereich | Instructions | Branches |
+|---|---:|---:|
+| GameController | 26,83 % | nicht vorhanden |
+| GameService | 100,00 % | 100,00 % |
+| GameBadges | 100,00 % | 100,00 % |
+| Total | 56,04 % | 100,00 % |
+
+Werte aus den JaCoCo-XML-Zählern; HTML zeigt gekürzte ganze Prozentwerte.
+Nicht abgedeckter Code liegt unter anderem in den Schreibendpunkten des GameController,
+im SteamController und in Teilen des GlobalExceptionHandler.
+Einen sofortigen 80-%-Schwellwert würde ich bei aktuell 56,04 % nicht erzwingen,
+sondern zuerst fehlende CRUD- und Fehlerfälle sinnvoll prüfen.
+Abdeckung misst ausgeführten Code, nicht die Qualität der Assertions oder die
+Vollständigkeit der geprüften Anforderungen.
+
+### Erklärungen
+
+Ein Unit-Test isoliert eine Klasse und ersetzt Abhängigkeiten durch Mocks.
+Ein Integrationstest prüft hier zusätzlich HTTP-Mapping, JSON-Ausgabe, Repository-Abfrage
+und H2-Datenbank; beide Testarten finden unterschiedliche Fehler.
+
+Der ursprüngliche Badge-Test verglich das feste Datum 20.10.2026 mit der
+veränderlichen Systemzeit und wurde ab 20.11.2026 rot. Ursache: **Zeit**.
+Mit `Clock.fixed` ist im Test immer der 27.10.2026 in Europe/Zurich.
+Im Betrieb kann `Clock.systemDefaultZone()` übergeben werden.
+Das Datum manuell nachzuführen verschiebt den Fehler nur; eine feste Uhr macht
+das Ergebnis unabhängig vom Ausführungstag. Weitere Flaky-Ursachen sind Zufall
+(Gegenmittel: fester Seed) und gemeinsame Testdaten (Gegenmittel: isolierte Daten).
+
+### Abgabe
+
+- [Repository](https://github.com/dami54ano/TDD-und-CI-CD-mit-GitHub-Actions)
+- [Issue](https://github.com/dami54ano/TDD-und-CI-CD-mit-GitHub-Actions/issues/2)
+- [Pipeline-Läufe](https://github.com/dami54ano/TDD-und-CI-CD-mit-GitHub-Actions/actions/workflows/ci.yml): erfolgreichen Lauf öffnen, Zusammenfassung mit **jacoco-backend** unter **Artifacts** aufnehmen.
+- Lehrperson als Collaborator sicherstellen und die zwei Links mit dem Screenshot bis 29.11.2026, 23:59 Uhr in Teams abgeben.
+
+
 
 ## Ausgangslage
 
